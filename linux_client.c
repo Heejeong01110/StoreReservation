@@ -65,7 +65,7 @@ void *send_msg(void *arg){
         return NULL;
 }
 
-
+//주석주석
 
 
 void *recv_msg(void *arg){
