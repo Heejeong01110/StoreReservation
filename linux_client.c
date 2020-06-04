@@ -66,7 +66,7 @@ void *send_msg(void *arg){
 }
 
 //주석주석
-
+//주석
 
 void *recv_msg(void *arg){
         int sock=*((int*)arg);

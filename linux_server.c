@@ -93,7 +93,7 @@ void send_msg(char *msg,int len){
 }
 
 
-
+//주석확인
 
 
 
