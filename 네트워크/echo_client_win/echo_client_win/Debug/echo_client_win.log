@@ -1,0 +1,4 @@
+﻿  echo_client_win.c
+C:\Users\han\Desktop\Test\echo_client_win\echo_client_win\echo_client_win.c(29,28): warning C4996: 'inet_addr': Use inet_pton() or InetPton() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
+  LINK : C:\Users\han\Desktop\Test\echo_client_win\Debug\echo_client_win.exe을(를) 찾을 수 없거나 마지막 증분 링크에 의해 빌드되지 않았습니다. 전체 링크를 수행하고 있습니다.
+  echo_client_win.vcxproj -> C:\Users\han\Desktop\Test\echo_client_win\Debug\echo_client_win.exe
