@@ -35,47 +35,6 @@ public class Threadserver {
 	public static void main(String[] args) {
 		
 		
-		Connection conn = null;
-		Statement state = null;
-		try {
-			Class.forName(JDBC_DRIVER);
-			conn=DriverManager.getConnection(DB_URL, USER_NAME, PASSWORD);
-			System.out.println("[ MySQL Connection  ] \n");
-			state = conn.createStatement();
-			
-			String sql;
-			sql = "SELECT * FROM storereservation.store";
-			ResultSet rs = state.executeQuery(sql);
-			while(rs.next()) {
-				String indexNo = rs.getString("indexNo");
-				String storeName = rs.getString("storeName");
-				String storeNumber = rs.getString("storeNumber");
-				String delivery = rs.getString("delivery");
-				String location = rs.getString("location");
-				String full1 = indexNo + " " + storeName + " " + storeNumber + " " + delivery + " " + location;
-				System.out.println(full1);
-			}
-			
-			rs.close();
-			state.close();
-			conn.close();
-			
-		}catch(Exception e) {
-			e.printStackTrace();
-		}finally {
-			try {
-				if(state!=null)
-					state.close();
-			}catch(SQLException ex1) {
-				
-			}
-			try {
-				if(conn!=null)
-					conn.close();
-			}catch(SQLException ex1) {
-				
-			}
-		}
 		
 		try {
 			serverSocket = new ServerSocket();
@@ -146,3 +105,4 @@ class ConnectionWrap implements Runnable{
 		}
 	}
 }
+
