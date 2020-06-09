@@ -8,6 +8,11 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -18,6 +23,10 @@ public class Threadserver {
 	private static final int PORT=9190;
 	private static final int THREAD_CNT=5;
 	private static ExecutorService threadPool = Executors.newFixedThreadPool(THREAD_CNT);
+	private final static String JDBC_DRIVER = "com.mysql.jdbc.Driver";
+	private final static String DB_URL = "jdbc:mysql://127.0.0.1:3306/root/?serverTimezone=Asia/Seoul";
+	private final static String USER_NAME = "root";
+	private final static String PASSWORD = "12345678";
 	
 	
 	
@@ -25,6 +34,45 @@ public class Threadserver {
 	
 	Scanner sc = new Scanner(System.in);
 	public static void main(String[] args) {
+		Connection conn = null;
+		Statement state = null;
+		try {
+			Class.forName(JDBC_DRIVER);
+			conn=DriverManager.getConnection(DB_URL, USER_NAME, PASSWORD);
+			System.out.println("[ MySQL Connection  ] \n");
+			state = conn.createStatement();
+			
+			String sql;
+			sql = "SELECT * FROM storereservation.store";
+			ResultSet rs = state.executeQuery(sql);
+			while(rs.next()) {
+				String indexNo = rs.getString("indexNo");
+				String storeName = rs.getString("storeName");
+				String storeNumber = rs.getString("storeNumber");
+				String delivery = rs.getString("delivery");
+				String location = rs.getString("location");
+				String full = indexNo + " " + storeName + " " + storeNumber + " " + delivery + " " + location;
+			}
+			rs.close();
+			state.close();
+			conn.close();
+			
+		}catch(Exception e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				if(state!=null)
+					state.close();
+			}catch(SQLException ex1) {
+				
+			}
+			try {
+				if(conn!=null)
+					conn.close();
+			}catch(SQLException ex1) {
+				
+			}
+		}
 		try {
 			serverSocket = new ServerSocket();
 			serverSocket.bind(new InetSocketAddress("0.0.0.0", PORT));
@@ -71,6 +119,7 @@ class ConnectionWrap implements Runnable{
 				OutputStream os = socket.getOutputStream();
 				OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");
 				PrintWriter pw = new PrintWriter(osw, true);
+				String intro = "\n 안녕하세요 \n 안녕하세요";
 				
 				String buffer = null;
 				buffer = br.readLine();
@@ -81,7 +130,8 @@ class ConnectionWrap implements Runnable{
 					break;
 				}
 				System.out.println("[server] recieved : "+buffer);
-				pw.println(buffer);
+				//pw.println(buffer);
+				pw.println(intro);
 			}
 		}catch(IOException e) {
 			e.printStackTrace();
