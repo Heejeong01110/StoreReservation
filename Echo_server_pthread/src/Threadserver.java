@@ -98,7 +98,7 @@ class ConnectionWrap implements Runnable{
 */
 class DBManager implements Runnable{
 	private final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
-	private final String DB_URL = "jdbc:mysql://localhost/storereservation?&useSSL=false"; //접속할 DB 서버
+	private final String DB_URL = "jdbc:mysql://127.0.0.1:3306/storereservation?&useSSL=false"; //접속할 DB 서버
 	
 	private final String USER_NAME = "storeDB"; //DB에 접속할 사용자 이름을 상수로 정의
 	private final String PASSWORD = "12345678"; //사용자의 비밀번호를 상수로 정의
