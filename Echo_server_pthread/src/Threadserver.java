@@ -23,10 +23,10 @@ public class Threadserver {
 	private static final int PORT=9190;
 	private static final int THREAD_CNT=5;
 	private static ExecutorService threadPool = Executors.newFixedThreadPool(THREAD_CNT);
-	private final static String JDBC_DRIVER = "com.mysql.jdbc.Driver";
-	private final static String DB_URL = "jdbc:mysql://127.0.0.1:3306/root/?serverTimezone=Asia/Seoul";
-	private final static String USER_NAME = "root";
-	private final static String PASSWORD = "12345678";
+	//private final static String JDBC_DRIVER = "com.mysql.jdbc.Driver";
+	//private final static String DB_URL = "jdbc:mysql://127.0.0.1:3306/root/?serverTimezone=Asia/Seoul";
+	//private final static String USER_NAME = "root";
+	//private final static String PASSWORD = "12345678";
 	
 	
 	
@@ -34,6 +34,8 @@ public class Threadserver {
 	
 	Scanner sc = new Scanner(System.in);
 	public static void main(String[] args) {
+		
+		/*
 		Connection conn = null;
 		Statement state = null;
 		try {
@@ -73,6 +75,7 @@ public class Threadserver {
 				
 			}
 		}
+		*/
 		try {
 			serverSocket = new ServerSocket();
 			serverSocket.bind(new InetSocketAddress("0.0.0.0", PORT));
@@ -87,7 +90,8 @@ public class Threadserver {
 			System.out.println("[server] connected by client");
 			System.out.println("[server] Connect with " + socketAddress.getHostString() + " " + socket.getPort());
 			try {
-				threadPool.execute(new DBManager(socket));
+				//threadPool.execute(new ConnectionWrap(socket)); //data submit
+				threadPool.execute(db); //data submit
 			}catch(Exception e) {
 				e.printStackTrace();
 			}
@@ -97,7 +101,7 @@ public class Threadserver {
 		}
 	}
 }
-/*
+
 class ConnectionWrap implements Runnable{
 	private Socket socket = null;
 	
@@ -145,27 +149,30 @@ class ConnectionWrap implements Runnable{
 		}
 	}
 }
-*/
+
 class DBManager implements Runnable{
 	private final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
-	private final String DB_URL = "jdbc:mysql://127.0.0.1:3306/storereservation?&useSSL=false"; //접속할 DB 서버
+	private final String DB_URL = "jdbc:mysql://127.0.0.1:3306/storereservation?&useSSL=false&serverTimezone=UTC&user=storeDB&password=12345678"; //접속할 DB 서버
 	
 	private final String USER_NAME = "storeDB"; //DB에 접속할 사용자 이름을 상수로 정의
 	private final String PASSWORD = "12345678"; //사용자의 비밀번호를 상수로 정의
 	
 	Connection conn = null;
 	Statement state = null;
-	
+	ResultSet rs = null;
 	private Socket socket = null;
 	ServerSocket serverSocket = null;
-	
 	
 	public DBManager(Socket socket){
 		this.socket=socket;
 		try {
 			Class.forName(JDBC_DRIVER);
-			conn = DriverManager.getConnection(DB_URL, USER_NAME, PASSWORD);
+			conn = DriverManager.getConnection(DB_URL);
 			state = conn.createStatement();
+			
+			String usejavatest = "use storereservation";
+		    state.executeUpdate(usejavatest);
+			
 		} catch(ClassNotFoundException cnfe) {       
 			cnfe.printStackTrace();
 		}
@@ -175,13 +182,13 @@ class DBManager implements Runnable{
 		finally {
 			if(conn!=null) try {conn.close();} catch(SQLException se) {}
 			if(state!=null) try {state.close();} catch(SQLException se) {}
-					
+			if(rs!=null) try {rs.close();} catch(SQLException se) {}
 		}
 	}
 	void storeList() {
 		String sql; //SQL문을 저장할 String
-		sql = "SELECT * FROM store";
-		ResultSet rs;
+		sql = "SELECT * FROM storereservation.store";
+		
 		try {
 			rs = state.executeQuery(sql);//SQL문을 전달하여 실행
 			System.out.println("번호 | 가게이름 | 빈 좌석 수");
