@@ -23,8 +23,8 @@ public class Threadserver {
 	private static final int PORT=9190;
 	private static final int THREAD_CNT=5;
 	private static ExecutorService threadPool = Executors.newFixedThreadPool(THREAD_CNT);
-	private final static String JDBC_DRIVER = "com.mysql.jdbc.Driver";
-	private final static String DB_URL = "jdbc:mysql://127.0.0.1:3306/root/?serverTimezone=Asia/Seoul";
+	private final static String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+	private final static String DB_URL = "jdbc:mysql://127.0.0.1:3306/storereservation?serverTimezone=Asia/Seoul";
 	private final static String USER_NAME = "root";
 	private final static String PASSWORD = "12345678";
 	
@@ -49,8 +49,10 @@ public class Threadserver {
 				String storeNumber = rs.getString("storeNumber");
 				String delivery = rs.getString("delivery");
 				String location = rs.getString("location");
-				String full = indexNo + " " + storeName + " " + storeNumber + " " + delivery + " " + location;
+				String full1 = indexNo + " " + storeName + " " + storeNumber + " " + delivery + " " + location;
+				System.out.println(full1);
 			}
+			
 			rs.close();
 			state.close();
 			conn.close();
