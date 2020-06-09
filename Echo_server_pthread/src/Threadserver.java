@@ -19,6 +19,8 @@ public class Threadserver {
 	private static final int THREAD_CNT=5;
 	private static ExecutorService threadPool = Executors.newFixedThreadPool(THREAD_CNT);
 	
+	
+	
 	static ServerSocket serverSocket = null;
 	
 	Scanner sc = new Scanner(System.in);
@@ -30,11 +32,14 @@ public class Threadserver {
 			System.out.println("[server] binding");
 			while(true) {
 			Socket socket = serverSocket.accept();
+			
+			DBManager db = new DBManager(socket);
+			db.storeList();
 			InetSocketAddress socketAddress = (InetSocketAddress) socket.getRemoteSocketAddress();
 			System.out.println("[server] connected by client");
 			System.out.println("[server] Connect with " + socketAddress.getHostString() + " " + socket.getPort());
 			try {
-				threadPool.execute(new ConnectionWrap(socket));
+				threadPool.execute(new DBManager(socket));
 			}catch(Exception e) {
 				e.printStackTrace();
 			}
@@ -44,7 +49,7 @@ public class Threadserver {
 		}
 	}
 }
-
+/*
 class ConnectionWrap implements Runnable{
 	private Socket socket = null;
 	
@@ -90,8 +95,8 @@ class ConnectionWrap implements Runnable{
 		}
 	}
 }
-
-class DBManager {
+*/
+class DBManager implements Runnable{
 	private final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
 	private final String DB_URL = "jdbc:mysql://localhost/storereservation?&useSSL=false"; //접속할 DB 서버
 	
@@ -101,7 +106,12 @@ class DBManager {
 	Connection conn = null;
 	Statement state = null;
 	
-	DBManager(){
+	private Socket socket = null;
+	ServerSocket serverSocket = null;
+	
+	
+	public DBManager(Socket socket){
+		this.socket=socket;
 		try {
 			Class.forName(JDBC_DRIVER);
 			conn = DriverManager.getConnection(DB_URL, USER_NAME, PASSWORD);
@@ -165,7 +175,40 @@ class DBManager {
 					
 		    
 	}
-			
-		 
-		
+	@Override
+	public void run() {
+		try {
+			while(true) {
+				InputStream is = socket.getInputStream();
+				InputStreamReader isr = new InputStreamReader(is, "UTF-8");
+				BufferedReader br = new BufferedReader(isr);
+				//가져와서 StreamWriter, PrintWriter로 감싼다
+				OutputStream os = socket.getOutputStream();
+				OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");
+				PrintWriter pw = new PrintWriter(osw, true);
+				
+				String buffer = null;
+				buffer = br.readLine();
+				
+				//storeList(); 
+				
+				if(buffer == null) {
+					System.out.println("[server] closed by client");
+					break;
+				}
+				System.out.println("[server] recieved : "+buffer);
+				pw.println(buffer);
+			}
+		}catch(IOException e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				if(serverSocket !=null && !serverSocket.isClosed())
+					serverSocket.close();
+			}catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
 	}
+			
+}
