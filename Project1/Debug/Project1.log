@@ -1,0 +1,13 @@
+﻿  Client.c
+C:\Users\gms04\source\repos\Project1\Client.c(44,16): warning C4047: '함수': 'const char *'의 간접 참조 수준이 'int'과(와) 다릅니다.
+C:\Users\gms04\source\repos\Project1\Client.c(44,16): warning C4024: 'strcmp': 형식 및 실제 매개 변수 1의 형식이 서로 다릅니다.
+C:\Users\gms04\source\repos\Project1\Client.c(50,19): warning C4047: '함수': 'const char *'의 간접 참조 수준이 'int'과(와) 다릅니다.
+C:\Users\gms04\source\repos\Project1\Client.c(50,19): warning C4024: 'send': 형식 및 실제 매개 변수 2의 형식이 서로 다릅니다.
+C:\Users\gms04\source\repos\Project1\Client.c(50,29): warning C4047: '함수': 'const char *'의 간접 참조 수준이 'int'과(와) 다릅니다.
+C:\Users\gms04\source\repos\Project1\Client.c(50,29): warning C4024: 'strlen': 형식 및 실제 매개 변수 1의 형식이 서로 다릅니다.
+C:\Users\gms04\source\repos\Project1\Client.c(32,28): warning C4996: 'inet_addr': Use inet_pton() or InetPton() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
+C:\Users\gms04\source\repos\Project1\Client.c(43,3): warning C4996: 'scanf': This function or variable may be unsafe. Consider using scanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Users\gms04\source\repos\Project1\Client.c(15,6): warning C4101: 'result' :참조되지 않은 지역 변수입니다.
+C:\Users\gms04\source\repos\Project1\Client.c(15,23): warning C4101: 'i' :참조되지 않은 지역 변수입니다.
+C:\Users\gms04\source\repos\Project1\Client.c(15,14): warning C4101: 'opndCut' :참조되지 않은 지역 변수입니다.
+  Project1.vcxproj -> C:\Users\gms04\source\repos\Project1\Debug\Project1.exe
