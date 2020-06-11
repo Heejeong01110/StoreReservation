@@ -200,6 +200,53 @@ class ConnectionWrap implements Runnable{
 		   }
 		}
 	
+	
+	void DBUpdate(String kind, String storeNo, String emptyUpdate) {
+		Connection conn = null;
+		PreparedStatement pstmt = null;
+		   
+		   try {
+		      Class.forName(JDBC_DRIVER);
+		      conn=DriverManager.getConnection(DB_URL, USER_NAME, PASSWORD);
+		      System.out.println("[ MySQL Connection  ] \n");
+		      
+		      String sql;
+		      script2 = null; //init
+		      
+		      sql = "UPDATE storereservation.store set emptytable=? where indexNo = ' "+storeNo+" ' ";
+		      pstmt = conn.prepareStatement(sql);
+		      
+		      pstmt.setString(1,emptyUpdate);
+		      //pstmt.executeUpdate();
+		      pstmt.close();
+		      conn.close();
+		         
+		   }//try end
+		   catch (SQLException e) { 
+		      System.out.println("[SQL Error : " + e.getMessage() + "]"); 
+		   } catch (ClassNotFoundException e1) { 
+		      System.out.println("[JDBC Connector Driver 오류 : " + e1.getMessage() + "]"); 
+		   } finally { 
+		      //사용순서와 반대로 close 함 
+		      if (pstmt != null) { 
+		         try { 
+		            pstmt.close(); 
+		         } catch (SQLException e) { 
+		            e.printStackTrace();
+		         }
+		      } 
+		      if (conn != null) { 
+		         try { 
+		            conn.close(); 
+		         } catch (SQLException e) { 
+		            e.printStackTrace(); 
+		         } 
+		      } 
+		   }
+		
+	}
+	
+	
 	void DBWrite(String indexNo, UserInfo ui) { //fill1 output. 
 		   Connection conn = null;
 		   PreparedStatement pstmt = null;
@@ -212,7 +259,7 @@ class ConnectionWrap implements Runnable{
 		      String sql;
 		      script2 = null; //init
 		      
-		      sql = "INSERT INTO storereservation.reservation(indexNo, userId, userPhone, userNumber) values(?,?,?,?)";
+		      sql = "UPDATE storereservation.store` SET `emptyTable` = '4' WHERE (`indexNo` = '1')";
 		      pstmt = conn.prepareStatement(sql);
 		      
 		      pstmt.setString(1,indexNo);
@@ -298,10 +345,14 @@ class ConnectionWrap implements Runnable{
 						break;
 					}
 				}else if(buffer.equals("2")) {		//처음 2. 예약확인 누를경우
-					/*if(id==null) {
-						pw.println("아이디 / 전화번호 입력을 해주세요.");
-					}*/
-					pw.println(DBRead("resList", "temp"));
+					pw.println("예약을 확인할 아이디를 입력하세요");
+					buffer=null;
+					buffer=br.readLine();
+					if(buffer == null) {
+						System.out.println("[server] closed by client");
+						break;
+					}
+					pw.println(DBRead("resList", buffer));
 				}else if(buffer.equals("3")) {
 					
 					pw.println("아이디를 입력해주세요.");
@@ -315,6 +366,8 @@ class ConnectionWrap implements Runnable{
 					ui.putPhone(buffer);
 					pw.println("입력되었습니다.");
 					System.out.println(ui.UserId + " " + ui.UserPhone);
+						
+					
 					continue;
 				}else {								//이상한 번호를 눌렀을 경우
 					pw.println("다시 선택하여주십시오");
