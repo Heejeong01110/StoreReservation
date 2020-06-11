@@ -22,64 +22,12 @@ public class Threadserver {
 	private static final int PORT=9190;
 	private static final int THREAD_CNT=5;
 	private static ExecutorService threadPool = Executors.newFixedThreadPool(THREAD_CNT);
-	private final static String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
-	private final static String DB_URL = "jdbc:mysql://127.0.0.1:3306/storereservation?serverTimezone=Asia/Seoul";
-	private final static String USER_NAME = "root";
-	private final static String PASSWORD = "12345678";
 	static String script1;
-	static Connection conn = null;
-	static Statement state = null;
-	
 	static ServerSocket serverSocket = null;
 	
 	Scanner sc = new Scanner(System.in);
 	
-	
 	public static void main(String[] args) {
-		
-		try {
-			Class.forName(JDBC_DRIVER);
-			conn=DriverManager.getConnection(DB_URL, USER_NAME, PASSWORD);
-			System.out.println("[ MySQL Connection  ] \n");
-			state = conn.createStatement();
-			
-			String sql;
-			sql = "SELECT * FROM storereservation.store";
-			ResultSet rs = state.executeQuery(sql);
-			while(rs.next()) {
-				String indexNo = rs.getString("indexNo");
-				String storeName = rs.getString("storeName");
-				String storeNumber = rs.getString("storeNumber");
-				String delivery = rs.getString("delivery");
-				String location = rs.getString("location");
-				if(script1==null) {
-					script1 = indexNo + " " + storeName + " " + storeNumber + " " + delivery + " " + location +"\n";
-				}else {
-				script1 += indexNo + " " + storeName + " " + storeNumber + " " + delivery + " " + location +"\n";
-				}
-				//System.out.println(full1);
-			}
-			
-			rs.close();
-			state.close();
-			conn.close();
-			
-		}catch(Exception e) {
-			e.printStackTrace();
-		}finally {
-			try {
-				if(state!=null)
-					state.close();
-			}catch(SQLException ex1) {
-				
-			}
-			try {
-				if(conn!=null)
-					conn.close();
-			}catch(SQLException ex1) {
-				
-			}
-		}
 		try {
 			serverSocket = new ServerSocket();
 			serverSocket.bind(new InetSocketAddress("0.0.0.0", PORT));
@@ -107,10 +55,15 @@ class ConnectionWrap implements Runnable{
 	private String script1=null;
 	private String script2=null;
 	ServerSocket serverSocket = null;
+	
+	
 	private final static String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
-	private final static String DB_URL = "jdbc:mysql://127.0.0.1:3306/storereservation?serverTimezone=Asia/Seoul";
-	private final static String USER_NAME = "root";
-	private final static String PASSWORD = "12345678";
+	//private final static String DB_URL = "jdbc:mysql://127.0.0.1:3306/storereservation?serverTimezone=Asia/Seoul";
+	private final static String DB_URL = "jdbc:mysql://127.0.0.1:3306/storereservation?serverTimezone=Asia/Seoul&useSSL=false";//강희정
+	//private final static String USER_NAME = "root";
+	private final static String USER_NAME = "storeDB";//강희정
+	//private final static String PASSWORD = "12345678";
+	private final static String PASSWORD = "12345678";//강희정
 	static Connection conn = null;
 	static Statement state = null;
 	
@@ -118,6 +71,7 @@ class ConnectionWrap implements Runnable{
 		this.socket=socket;
 		this.script1=script1;
 	}
+	
 	String DBRead(String kind, String selectNo) { //fill1 output. 
 		   try {
 		      Class.forName(JDBC_DRIVER);
@@ -247,8 +201,6 @@ class ConnectionWrap implements Runnable{
 		}
 	
 	void DBWrite(String indexNo, UserInfo ui) { //fill1 output. 
-		   
-
 		   Connection conn = null;
 		   PreparedStatement pstmt = null;
 		   
@@ -256,8 +208,6 @@ class ConnectionWrap implements Runnable{
 		      Class.forName(JDBC_DRIVER);
 		      conn=DriverManager.getConnection(DB_URL, USER_NAME, PASSWORD);
 		      System.out.println("[ MySQL Connection  ] \n");
-		      
-		      
 		      
 		      String sql;
 		      script2 = null; //init
@@ -270,13 +220,8 @@ class ConnectionWrap implements Runnable{
 		      pstmt.setString(3,ui.UserPhone);
 		      pstmt.setString(4,ui.UserNumber);
 		      
-		      
 		      pstmt.close();
 		      conn.close();
-		         
-		         
-		         
-		         
 		         
 		   }//try end
 		   catch (SQLException e) { 
@@ -302,7 +247,6 @@ class ConnectionWrap implements Runnable{
 		   }
 		}
 		
-	
 	@Override
 	public void run() {
 		try {
@@ -314,7 +258,6 @@ class ConnectionWrap implements Runnable{
 				OutputStream os = socket.getOutputStream();
 				OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");
 				PrintWriter pw = new PrintWriter(osw, true);
-				//String intro = "\n : 줄 띄어쓰기  \n 안녕하세요";
 				String buffer = null;
 				UserInfo ui = new UserInfo();
 				String selstore;
@@ -372,8 +315,6 @@ class ConnectionWrap implements Runnable{
 					ui.putPhone(buffer);
 					pw.println("입력되었습니다.");
 					System.out.println(ui.UserId + " " + ui.UserPhone);
-						
-					
 					continue;
 				}else {								//이상한 번호를 눌렀을 경우
 					pw.println("다시 선택하여주십시오");
