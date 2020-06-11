@@ -34,15 +34,15 @@ public class Threadserver {
 			
 			System.out.println("[server] binding");
 			while(true) {
-			Socket socket = serverSocket.accept();
-			InetSocketAddress socketAddress = (InetSocketAddress) socket.getRemoteSocketAddress();
-			System.out.println("[server] connected by client");
-			System.out.println("[server] Connect with " + socketAddress.getHostString() + " " + socket.getPort());
-			try {
-				threadPool.execute(new ConnectionWrap(socket, script1));
-			}catch(Exception e) {
-				e.printStackTrace();
-			}
+				Socket socket = serverSocket.accept();
+				InetSocketAddress socketAddress = (InetSocketAddress) socket.getRemoteSocketAddress();
+				System.out.println("[server] connected by client");
+				System.out.println("[server] Connect with " + socketAddress.getHostString() + " " + socket.getPort());
+				try {
+					threadPool.execute(new ConnectionWrap(socket, script1));
+				}catch(Exception e) {
+					e.printStackTrace();
+				}
 			}
 		}catch(IOException e) {
 			e.printStackTrace();
@@ -73,18 +73,18 @@ class ConnectionWrap implements Runnable{
 	}
 	
 	String DBRead(String kind, String selectNo) { //fill1 output. 
-		   try {
-		      Class.forName(JDBC_DRIVER);
-		      conn=DriverManager.getConnection(DB_URL, USER_NAME, PASSWORD);
-		      System.out.println("[ MySQL Connection  ] \n");
-		      state = conn.createStatement();
-		      ResultSet rs;
+		try {
+			Class.forName(JDBC_DRIVER);
+			conn=DriverManager.getConnection(DB_URL, USER_NAME, PASSWORD);
+			System.out.println("[ MySQL Connection  ] \n");
+			state = conn.createStatement();
+		    ResultSet rs;
 		      
-		      String sql;
-		      script2 = null; //init
-		      switch(kind) {
-		      case "storeList":
-		         sql = "SELECT * FROM storereservation.store";
+		    String sql;
+		    script2 = null; //init
+		    switch(kind) {
+		    case "storeList":
+		    	sql = "SELECT * FROM storereservation.store";
 		         rs = state.executeQuery(sql);
 
 		         while(rs.next()) {
@@ -217,7 +217,7 @@ class ConnectionWrap implements Runnable{
 		      pstmt = conn.prepareStatement(sql);
 		      
 		      pstmt.setString(1,emptyUpdate);
-		      //pstmt.executeUpdate();
+		      pstmt.executeUpdate();
 		      pstmt.close();
 		      conn.close();
 		         
@@ -299,12 +299,14 @@ class ConnectionWrap implements Runnable{
 		try {
 			while(true) {
 				InputStream is = socket.getInputStream();
-				InputStreamReader isr = new InputStreamReader(is, "UTF-8");
+				//InputStreamReader isr = new InputStreamReader(is, "UTF-8");
+				InputStreamReader isr = new InputStreamReader(is, "EUC_KR");
 				BufferedReader br = new BufferedReader(isr);
 				//outputStream 가져와서 StreamWriter, PrintWriter로 감싼다
 				OutputStream os = socket.getOutputStream();
-				OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");
+				OutputStreamWriter osw = new OutputStreamWriter(os, "EUC_KR");
 				PrintWriter pw = new PrintWriter(osw, true);
+				
 				String buffer = null;
 				UserInfo ui = new UserInfo();
 				String selstore;
