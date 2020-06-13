@@ -357,7 +357,8 @@ class ConnectionWrap implements Runnable{
 				
 				//pw.println(a) --> a(String)을 보내는 함수
 				//무조건 한번은 써야함!!
-				if(buffer.equals("1")) {			//처음 1. 음식점 확인 누를 경우
+				
+				if(buffer.equals("1")) {		//처음 1. 음식점 확인 누를 경우
 					while(true) {
 						pw.println(DBRead("storeList", "temp"));//store list send
 						buffer=null;
@@ -369,11 +370,15 @@ class ConnectionWrap implements Runnable{
 						}
 						System.out.println("[server] recieved : "+buffer);
 						pw.println(DBRead("menuList", buffer));
+						
 						temp = Integer.parseInt(DBRead("emptyTable", Integer.toString(indexsave)));	//3
 						//System.out.println(temp);
 						System.out.println(indexsave);
 						//System.out.println(DBRead("emptyTable", Integer.toString(indexsave)));
+						
+						
 						DBUpdate(Integer.toString(indexsave),temp-1);				//자리 꽉찼을 시 예약안되게끔 추가
+						
 						buffer=null;
 						buffer=br.readLine();
 						if(buffer == null) {
@@ -421,6 +426,7 @@ class ConnectionWrap implements Runnable{
 					pw.println("다시 선택하여주십시오");
 					continue;
 				}
+				
 			}
 		}catch(IOException e) {
 			e.printStackTrace();
