@@ -28,7 +28,6 @@ public class Threadserver {
 	
 	
 	public static void main(String[] args) {
-
 		try {
 			serverSocket = new ServerSocket();
 			serverSocket.bind(new InetSocketAddress("0.0.0.0", PORT));
@@ -316,7 +315,12 @@ class ConnectionWrap implements Runnable{
 		      pstmt.setString(3,ui.UserPhone);
 		      pstmt.setInt(4,Integer.parseInt(ui.UserNumber));
 		      int r = pstmt.executeUpdate();
-		      
+		      try {
+				Thread.sleep(10000);
+		      } catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+		      }
 		      pstmt.close();
 		      conn.close();
 		         
@@ -392,10 +396,8 @@ class ConnectionWrap implements Runnable{
 						}
 						System.out.println("[server] recieved : "+buffer);
 						pw.println("|  메뉴 번호  |     메뉴     |   가격   |\n" + DBRead("menuList", buffer) + "\n << 예약할 메뉴 번호를 입력하세요 >> (0. 처음으로 돌아가기)");
-						temp = Integer.parseInt(DBRead("emptyTable", Integer.toString(indexsave)));	//3
-						//System.out.println(temp);
-						System.out.println(indexsave);
-						//System.out.println(DBRead("emptyTable", Integer.toString(indexsave)));
+						//temp = Integer.parseInt(DBRead("emptyTable", Integer.toString(indexsave)));	//3
+						System.out.println("빈자리 : "+indexsave);
 										//자리 꽉찼을 시 예약안되게끔 추가
 						buffer=null;
 						buffer=br.readLine();
@@ -403,11 +405,9 @@ class ConnectionWrap implements Runnable{
 							pw.println("\n\n1. 음식점 확인 \n2. 예약확인 \n3. 아이디 / 전화번호 입력");
 							break;
 						}
-						if(temp==0) {
+						if(Integer.parseInt(DBRead("emptyTable", Integer.toString(indexsave)))==0) {
 							pw.println("<< 자리가 꽉 찼습니다. 다음에 다시 예약해주세요. >> \n\n1. 음식점 확인 \n2. 예약확인 \n3. 아이디 / 전화번호 입력 ");
 							break;
-						}else {
-							DBUpdate(Integer.toString(indexsave),temp-1);
 						}
 						if(buffer == null) {
 							System.out.println("[server] closed by client");
@@ -423,6 +423,7 @@ class ConnectionWrap implements Runnable{
 							break;
 						}
 						DBWrite(selstore, ui);
+						DBUpdate(Integer.toString(indexsave),Integer.parseInt(DBRead("emptyTable", Integer.toString(indexsave)))-1);
 						pw.println("<< 예약 완료되었습니다. >> \n\n1. 음식점 확인 \n2. 예약확인 \n3. 아이디 / 전화번호 입력");
 						break;
 						}
@@ -465,7 +466,6 @@ class ConnectionWrap implements Runnable{
 					pw.println("<< 입력되었습니다. >> \n\n1. 음식점 확인 \n2. 예약확인 \n3. 아이디 / 전화번호 입력 ");
 					System.out.println(ui.UserId + " " + ui.UserPhone);
 						
-					
 					continue;
 				}else {								//이상한 번호를 눌렀을 경우
 					pw.println("다시 선택하여주십시오");
