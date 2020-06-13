@@ -24,7 +24,6 @@ public class Threadserver {
 	static String script1;
 	static ServerSocket serverSocket = null;
 	
-	
 	public static void main(String[] args) {
 		try {
 			serverSocket = new ServerSocket();
@@ -66,6 +65,7 @@ class ConnectionWrap implements Runnable{
 	
 	private int indexsave;
 	private int emptytable;
+	
 	UserInfo ui = new UserInfo();
 	
 	public ConnectionWrap(Socket socket, String script1) {
@@ -143,17 +143,14 @@ class ConnectionWrap implements Runnable{
 		            return script2;
 		         case "emptyTable":
 		        	 sql = "SELECT emptyTable FROM storereservation.store where indexNo = " + selectNo;
-			            rs = state.executeQuery(sql);
-
-			            while(rs.next()) {
-			               emptytable = rs.getInt("emptyTable");
-			               
-			               
-			            }
-			            rs.close();
-			            state.close();
-			            conn.close();
-			            return Integer.toString(emptytable);
+			         rs = state.executeQuery(sql);
+			         while(rs.next()) {
+			        	 emptytable = rs.getInt("emptyTable");
+			         }
+			         rs.close();
+			         state.close();
+			         conn.close();
+			         return Integer.toString(emptytable);
 		         case "resList"://reservation list
 		            //sql = "SELECT * FROM storereservation.reservation where userId = '"+ selectNo+ "'";
 		            sql = "select r.resNo, s.storeName, r.userPhone, r.userNumber from reservation r, store s where r.indexNo = s.indexNo AND userId = '"+selectNo+"'";
@@ -185,8 +182,21 @@ class ConnectionWrap implements Runnable{
 		            script2 = "잘못된 입력입니다.";
 		            return script2;
 		      }
-		   return script2;
+		}//try end
+		catch(Exception e) {
+			e.printStackTrace();
+		}finally {
+			try {
+				if(state!=null)
+					state.close();
+		    }catch(SQLException ex1) {}
+		    try {
+		    	if(conn!=null)
+		    		conn.close();
+		    }catch(SQLException ex1) {}
 		}
+		return script2;
+	}
 	
 		
 	void DBUpdate(String storeNo, int emptyUpdate) {
