@@ -14,7 +14,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -22,17 +21,10 @@ public class Threadserver {
 	private static final int PORT=9190;
 	private static final int THREAD_CNT=5;
 	private static ExecutorService threadPool = Executors.newFixedThreadPool(THREAD_CNT);
-	private final static String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
-	private final static String DB_URL = "jdbc:mysql://127.0.0.1:3306/storereservation?serverTimezone=Asia/Seoul";
-	private final static String USER_NAME = "root";
-	private final static String PASSWORD = "12345678";
 	static String script1;
-	static Connection conn = null;
-	static Statement state = null;
+	
 	
 	static ServerSocket serverSocket = null;
-	
-	Scanner sc = new Scanner(System.in);
 	
 	
 	public static void main(String[] args) {
@@ -99,13 +91,24 @@ class ConnectionWrap implements Runnable{
 		         while(rs.next()) {
 		            String indexNo = rs.getString("indexNo");
 		            String storeName = rs.getString("storeName");
+		            if(storeName.length()>0 && storeName.length()<4) {
+		            	
+		            	storeName +="\t\t";
+		               }else if(storeName.length()>=4 && storeName.length()<8) {
+		            	   storeName +="\t";
+		               }
 		            String storeNumber = rs.getString("storeNumber");
 		            String delivery = rs.getString("delivery");
+		            if(delivery=="1") {
+		            	delivery="배달O";
+		            }else {
+		            	delivery="배달X";
+		            }
 		            String location = rs.getString("location");
 		               if(script2==null) {
-		                  script2 = indexNo + " " + storeName + " " + storeNumber + " " + delivery + " " + location +"\n";
+		                  script2 = "    "+ indexNo + "\t\t" + storeName + storeNumber + "\t  " + delivery + "\t\t" + location +"\n";
 		               }else {
-		                  script2 += indexNo + " " + storeName + " " + storeNumber + " " + delivery + " " + location +"\n";
+		                  script2 += "    " + indexNo + "\t\t" + storeName + storeNumber + "\t  " + delivery + "\t\t" + location +"\n";
 		               }
 		            }
 		         
@@ -122,11 +125,16 @@ class ConnectionWrap implements Runnable{
 		               String menuid = rs.getString("menuid");
 		               indexsave = rs.getInt("indexNo");
 		               String menuName = rs.getString("menuName");
+		               if(menuName.length()>0 && menuName.length()<4) {
+		            	   menuName +="\t\t";
+		               }else if(menuName.length()>=4 && menuName.length()<8) {
+		            	   menuName +="\t";
+		               }
 		               String price = rs.getString("price");
 		               if(script2==null) {
-		                  script2 = menuid + " " + menuName + " " + price +"\n";
+		                  script2 = "\t"+menuid + "\t" + menuName+ price +"\n";
 		               }else {
-		                  script2 += menuid + " " + menuName + " " + price +"\n";
+		                  script2 += "\t"+ menuid + "\t" + menuName + price +"\n";
 		               }
 		               
 		            }
@@ -148,18 +156,25 @@ class ConnectionWrap implements Runnable{
 			            conn.close();
 			            return Integer.toString(emptytable);
 		         case "resList"://reservation list
-		            sql = "SELECT * FROM storereservation.reservation where userId = '"+ selectNo+ "'";
+		            //sql = "SELECT * FROM storereservation.reservation where userId = '"+ selectNo+ "'";
+		            sql = "select r.resNo, s.storeName, r.userPhone, r.userNumber from reservation r, store s where r.indexNo = s.indexNo AND userId = '"+selectNo+"'";
 		            rs = state.executeQuery(sql);
 
 		            while(rs.next()) {
 		               String resNo = rs.getString("resNo");
-		               String indexNo = rs.getString("indexNo");
+		               //String indexNo = rs.getString("indexNo");
+		               String storeName = rs.getString("storeName");
+		               if(storeName.length()>0 && storeName.length()<4) {
+			            	storeName +="\t\t";
+			               }else if(storeName.length()>=4 && storeName.length()<8) {
+			            	   storeName +="\t";
+			               }
 		               String userPhone = rs.getString("userPhone");
 		               String userNumber = rs.getString("userNumber");
 		               if(script2==null) {
-		                  script2 = resNo + " " + indexNo + " " + userPhone + " " + userNumber +"\n";
+		                  script2 = "    "+resNo + "\t\t" + storeName + userPhone + "\t" + userNumber +"\n";
 		               }else {
-		                  script2 += resNo + " " + indexNo + " " + userPhone + " " + userNumber +"\n";
+		                  script2 += "    "+resNo + "\t\t" + storeName + userPhone + "\t" + userNumber +"\n";
 		               }
 		            }
 		            rs.close();
@@ -295,7 +310,7 @@ class ConnectionWrap implements Runnable{
 		      
 		      pstmt.setInt(1,Integer.parseInt(indexNo));
 		      pstmt.setString(2,ui.UserId);
-		      pstmt.setInt(3,Integer.parseInt(ui.UserPhone));
+		      pstmt.setString(3,ui.UserPhone);
 		      pstmt.setInt(4,Integer.parseInt(ui.UserNumber));
 		      int r = pstmt.executeUpdate();
 		      
@@ -360,61 +375,91 @@ class ConnectionWrap implements Runnable{
 				if(buffer.equals("1")) {			//처음 1. 음식점 확인 누를 경우
 					while(true) {
 						//pw.println(script1);
-						pw.println(DBRead("storeList", "temp"));
+						pw.println("|   번호   |   식당 이름   |   식당 전화번호   |   배달여부   |   위치   |\n" + DBRead("storeList", "temp") +"\n<< 예약할 식당을 선택하세요 >> (0. 처음으로 돌아가기)");
 						buffer=null;
 						buffer=br.readLine();
+						if(buffer.equals("0")) {
+							pw.println("\n\n1. 음식점 확인 \n2. 예약확인 \n3. 아이디 / 전화번호 입력");
+							break;
+						}else {
 						selstore = buffer;
 						if(buffer == null) {
 							System.out.println("[server] closed by client");
 							break;
 						}
 						System.out.println("[server] recieved : "+buffer);
-						pw.println(DBRead("menuList", buffer));
+						pw.println("|  메뉴 번호  |     메뉴     |   가격   |\n" + DBRead("menuList", buffer) + "\n << 예약할 메뉴 번호를 입력하세요 >> (0. 처음으로 돌아가기)");
 						temp = Integer.parseInt(DBRead("emptyTable", Integer.toString(indexsave)));	//3
 						//System.out.println(temp);
 						System.out.println(indexsave);
 						//System.out.println(DBRead("emptyTable", Integer.toString(indexsave)));
-						DBUpdate(Integer.toString(indexsave),temp-1);				//자리 꽉찼을 시 예약안되게끔 추가
+										//자리 꽉찼을 시 예약안되게끔 추가
 						buffer=null;
 						buffer=br.readLine();
+						if(buffer.equals("0")) {
+							pw.println("\n\n1. 음식점 확인 \n2. 예약확인 \n3. 아이디 / 전화번호 입력");
+							break;
+						}
+						if(temp==0) {
+							pw.println("<< 자리가 꽉 찼습니다. 다음에 다시 예약해주세요. >> \n\n1. 음식점 확인 \n2. 예약확인 \n3. 아이디 / 전화번호 입력 ");
+							break;
+						}else {
+							DBUpdate(Integer.toString(indexsave),temp-1);
+						}
 						if(buffer == null) {
 							System.out.println("[server] closed by client");
 							break;
 						}
-						pw.println("인원수를 입력하세요");
+						pw.println("인원수를 입력하세요 (0. 처음으로 돌아가기)");
 						buffer=null;
 						buffer=br.readLine();
 						ui.UserNumber = buffer;
 						System.out.println(ui.UserId + " " + ui.UserPhone);
 						if(ui.UserId==null || ui.UserPhone==null) {
-							pw.println("예약 아이디와 전화번호를 입력하세요");
+							pw.println("<< 예약 아이디와 전화번호를 입력하세요>> \n\n1. 음식점 확인 \n2. 예약확인 \n3. 아이디 / 전화번호 입력");
 							break;
 						}
 						DBWrite(selstore, ui);
-						pw.println("예약 완료되었습니다.");
+						pw.println("<< 예약 완료되었습니다. >> \n\n1. 음식점 확인 \n2. 예약확인 \n3. 아이디 / 전화번호 입력");
 						break;
+						}
 					}
 				}else if(buffer.equals("2")) {		//처음 2. 예약확인 누를경우
-					pw.println("예약을 확인할 아이디를 입력하세요");
+					pw.println("예약을 확인할 아이디를 입력하세요 (0. 처음으로 돌아가기)");
 					buffer=null;
 					buffer=br.readLine();
+					if(buffer.equals("0")) {
+						pw.println("\n\n1. 음식점 확인 \n2. 예약확인 \n3. 아이디 / 전화번호 입력");
+						break;
+					}
 					if(buffer == null) {
 						System.out.println("[server] closed by client");
 						break;
 					}
-					pw.println(DBRead("resList", buffer));
+					if(DBRead("resList", buffer)==null) {
+						pw.println("예약 내역이 존재하지 않습니다. 예약을 해주시기 바랍니다. \n\n1. 음식점 확인 \n2. 예약확인 \n3. 아이디 / 전화번호 입력 ");
+					}else {
+					pw.println("|  번호  |    식당 이름    |    전화번호    |   인원수   |\n" + DBRead("resList", buffer) + "\n\n1. 음식점 확인 \n2. 예약확인 \n3. 아이디 / 전화번호 입력 ");
+					}
 				}else if(buffer.equals("3")) {
 					
-					pw.println("아이디를 입력해주세요.");
+					pw.println("아이디를 입력해주세요. (0. 처음으로 돌아가기)");
 					buffer=null;
 					buffer=br.readLine();
-					
+					if(buffer.equals("0")) {
+						pw.println("\n\n1. 음식점 확인 \n2. 예약확인 \n3. 아이디 / 전화번호 입력");
+						break;
+					}
 					ui.putId(buffer);
-					pw.println("전화번호를 입력해주세요.");
+					pw.println("전화번호를 입력해주세요. (0. 처음으로 돌아가기)");
 					buffer=null;
 					buffer=br.readLine();
+					if(buffer.equals("0")) {
+						pw.println("\n\n1. 음식점 확인 \n2. 예약확인 \n3. 아이디 / 전화번호 입력");
+						break;
+					}
 					ui.putPhone(buffer);
-					pw.println("입력되었습니다.");
+					pw.println("<< 입력되었습니다. >> \n\n1. 음식점 확인 \n2. 예약확인 \n3. 아이디 / 전화번호 입력 ");
 					System.out.println(ui.UserId + " " + ui.UserPhone);
 						
 					
