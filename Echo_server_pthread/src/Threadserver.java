@@ -336,7 +336,7 @@ class ConnectionWrap implements Runnable {
 		try {
 			while (true) {
 				InputStream is = socket.getInputStream();
-				InputStreamReader isr = new InputStreamReader(is, "UTF-8");
+				InputStreamReader isr = new InputStreamReader(is, "UTF-8"); //
 				BufferedReader br = new BufferedReader(isr);
 				// outputStream 가져와서 StreamWriter, PrintWriter로 감싼다
 				OutputStream os = socket.getOutputStream();
