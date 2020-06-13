@@ -30,6 +30,9 @@ public class SimpleThreadPool {
 	}
 
 }
+private final static String DB_URL = "jdbc:mysql://127.0.0.1:3306/storereservation?serverTimezone=Asia/Seoul&useSSL=false";//강희정
+private final static String USER_NAME = "storeDB";//강희정
+private final static String PASSWORD = "12345678";//강희정
 
 
 class ConnectionWrap1 implements Runnable{
