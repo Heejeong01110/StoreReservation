@@ -220,7 +220,7 @@ class ConnectionWrap implements Runnable{
 		      pstmt.executeUpdate();
 		      pstmt.close();
 		      conn.close();
-		         
+
 		   }//try end
 		   catch (SQLException e) { 
 		      System.out.println("[SQL Error : " + e.getMessage() + "]"); 
@@ -299,12 +299,11 @@ class ConnectionWrap implements Runnable{
 		try {
 			while(true) {
 				InputStream is = socket.getInputStream();
-				//InputStreamReader isr = new InputStreamReader(is, "UTF-8");
-				InputStreamReader isr = new InputStreamReader(is, "EUC_KR");
+				InputStreamReader isr = new InputStreamReader(is, "UTF-8");
+				//InputStreamReader isr = new InputStreamReader(is, "EUC_KR");
 				BufferedReader br = new BufferedReader(isr);
-				//outputStream 가져와서 StreamWriter, PrintWriter로 감싼다
 				OutputStream os = socket.getOutputStream();
-				OutputStreamWriter osw = new OutputStreamWriter(os, "EUC_KR");
+				OutputStreamWriter osw = new OutputStreamWriter(os, "UTF-8");
 				PrintWriter pw = new PrintWriter(osw, true);
 				
 				String buffer = null;
@@ -323,7 +322,7 @@ class ConnectionWrap implements Runnable{
 				if(buffer.equals("1")) {			//처음 1. 음식점 확인 누를 경우
 					while(true) {
 						//pw.println(script1);
-						pw.println(DBRead("storeList", "temp"));
+						pw.println(DBRead("storeList", "temp"));//store list send
 						buffer=null;
 						buffer=br.readLine();
 						selstore = buffer;
@@ -332,14 +331,14 @@ class ConnectionWrap implements Runnable{
 							break;
 						}
 						System.out.println("[server] recieved : "+buffer);
-						pw.println(DBRead("menuList", buffer));
+						pw.println(DBRead("menuList", buffer)); //menu list send
 						buffer=null;
 						buffer=br.readLine();
 						if(buffer == null) {
 							System.out.println("[server] closed by client");
 							break;
 						}
-						pw.println("인원수를 입력하세요");
+						pw.println("인원수를 입력하세요"); //read Usernum
 						buffer=null;
 						buffer=br.readLine();
 						ui.UserNumber = buffer;
@@ -355,7 +354,7 @@ class ConnectionWrap implements Runnable{
 						break;
 					}
 					pw.println(DBRead("resList", buffer));
-				}else if(buffer.equals("3")) {
+				}else if(buffer.equals("3")) { //3. 정보입력
 					
 					pw.println("아이디를 입력해주세요.");
 					buffer=null;
@@ -369,7 +368,6 @@ class ConnectionWrap implements Runnable{
 					pw.println("입력되었습니다.");
 					System.out.println(ui.UserId + " " + ui.UserPhone);
 						
-					
 					continue;
 				}else {								//이상한 번호를 눌렀을 경우
 					pw.println("다시 선택하여주십시오");
