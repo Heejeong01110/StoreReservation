@@ -16,6 +16,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Threadserver {
 	private static final int PORT = 9190;
@@ -26,6 +28,7 @@ public class Threadserver {
 	static ServerSocket serverSocket = null;
 
 	public static void main(String[] args) {
+
 		try {
 			serverSocket = new ServerSocket();
 			serverSocket.bind(new InetSocketAddress("0.0.0.0", PORT));
@@ -54,8 +57,7 @@ class ConnectionWrap implements Runnable {
 	private String script2 = null;
 	ServerSocket serverSocket = null;
 	private final static String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
-	// private final static String DB_URL =
-	// "jdbc:mysql://127.0.0.1:3306/storereservation?serverTimezone=Asia/Seoul";
+	// private final static String DB_URL = "jdbc:mysql://127.0.0.1:3306/storereservation?serverTimezone=Asia/Seoul";
 	// private final static String USER_NAME = "root";
 	// private final static String PASSWORD = "12345678";
 	private final static String DB_URL = "jdbc:mysql://127.0.0.1:3306/storereservation?serverTimezone=Asia/Seoul&useSSL=false";// 강희정
@@ -63,8 +65,12 @@ class ConnectionWrap implements Runnable {
 	private final static String PASSWORD = "12345678";// 강희정
 	static Connection conn = null;
 	static Statement state = null;
+	private String UserId = null;
+	private String UserPhone = null;
+	private String UserNumber = null;
 	private int indexsave;
 	private int emptytable;
+	final Lock lock = new ReentrantLock();
 	UserInfo ui = new UserInfo();
 
 	public ConnectionWrap(Socket socket, String script1) {
@@ -97,6 +103,7 @@ class ConnectionWrap implements Runnable {
 						storeName += "\t";
 					}
 					String storeNumber = rs.getString("storeNumber");
+					String storeTable = rs.getString("emptyTable");
 					String delivery = rs.getString("delivery");
 					if (delivery == "1") {
 						delivery = "배달O";
@@ -105,11 +112,11 @@ class ConnectionWrap implements Runnable {
 					}
 					String location = rs.getString("location");
 					if (script2 == null) {
-						script2 = "    " + indexNo + "\t\t" + storeName + storeNumber + "\t  " + delivery + "\t\t"
-								+ location + "\n";
+						script2 = "    " + indexNo + "\t\t" + storeName + storeNumber + "\t  " + storeTable + "\t\t  "
+								+ delivery + "\t\t" + location + "\n";
 					} else {
-						script2 += "    " + indexNo + "\t\t" + storeName + storeNumber + "\t  " + delivery + "\t\t"
-								+ location + "\n";
+						script2 += "    " + indexNo + "\t\t" + storeName + storeNumber + "\t  " + storeTable + "\t\t  "
+								+ delivery + "\t\t" + location + "\n";
 					}
 				}
 
@@ -137,30 +144,34 @@ class ConnectionWrap implements Runnable {
 					} else {
 						script2 += "\t" + menuid + "\t" + menuName + price + "\n";
 					}
+
 				}
 				rs.close();
 				state.close();
 				conn.close();
 				return script2;
-
 			case "emptyTable":
 				sql = "SELECT emptyTable FROM storereservation.store where indexNo = " + selectNo;
 				rs = state.executeQuery(sql);
 
 				while (rs.next()) {
 					emptytable = rs.getInt("emptyTable");
+
 				}
 				rs.close();
 				state.close();
 				conn.close();
 				return Integer.toString(emptytable);
 			case "resList":// reservation list
+				// sql = "SELECT * FROM storereservation.reservation where userId = '"+
+				// selectNo+ "'";
 				sql = "select r.resNo, s.storeName, r.userPhone, r.userNumber from reservation r, store s where r.indexNo = s.indexNo AND userId = '"
 						+ selectNo + "'";
 				rs = state.executeQuery(sql);
 
 				while (rs.next()) {
 					String resNo = rs.getString("resNo");
+					// String indexNo = rs.getString("indexNo");
 					String storeName = rs.getString("storeName");
 					if (storeName.length() > 0 && storeName.length() < 4) {
 						storeName += "\t\t";
@@ -193,21 +204,26 @@ class ConnectionWrap implements Runnable {
 				if (state != null)
 					state.close();
 			} catch (SQLException ex1) {
+
 			}
 			try {
 				if (conn != null)
 					conn.close();
 			} catch (SQLException ex1) {
+
 			}
 		}
 		return script2;
 	}
 
-	void DBUpdate(String storeNo, int emptyUpdate) {
+	int DBUpdate(String storeNo, int emptyUpdate) {
+		lock.lock();
 		Connection conn = null;
 		PreparedStatement pstmt = null;
+		int check = 0;
 
 		try {
+
 			Class.forName(JDBC_DRIVER);
 			conn = DriverManager.getConnection(DB_URL, USER_NAME, PASSWORD);
 			System.out.println("[ MySQL Connection  ] \n");
@@ -219,9 +235,15 @@ class ConnectionWrap implements Runnable {
 			pstmt = conn.prepareStatement(sql);
 
 			pstmt.setInt(1, emptyUpdate);
-			int r = pstmt.executeUpdate();
-			pstmt.close();
-			conn.close();
+			if (DBRead("emptyTable", Integer.toString(indexsave)).equals("0")) {
+				check = 1; // emptyTable가 0이면 check함수 1 --> 구별
+			} else {
+				check = 2; // emptyTable가 1이상이면 check함수 2 -->구별용
+				int r = pstmt.executeUpdate();
+				pstmt.close();
+				conn.close();
+
+			}
 
 		} // try end
 		catch (SQLException e) {
@@ -229,6 +251,7 @@ class ConnectionWrap implements Runnable {
 		} catch (ClassNotFoundException e1) {
 			System.out.println("[JDBC Connector Driver 오류 : " + e1.getMessage() + "]");
 		} finally {
+			lock.unlock();
 			// 사용순서와 반대로 close 함
 			if (pstmt != null) {
 				try {
@@ -245,6 +268,7 @@ class ConnectionWrap implements Runnable {
 				}
 			}
 		}
+		return check; // 1이면 빈테이블 0, 2이면 빈테이블 1이상
 
 	}
 
@@ -252,6 +276,11 @@ class ConnectionWrap implements Runnable {
 		private String UserId = null;
 		private String UserPhone = null;
 		private String UserNumber = null;
+		/*
+		 * public UserInfo(String UserId, String UserPhone, String UserNumber) {
+		 * this.UserId = UserId; this.UserPhone = UserPhone; this.UserNumber =
+		 * UserNumber; }
+		 */
 
 		public void putId(String id) {
 			this.UserId = id;
@@ -283,12 +312,15 @@ class ConnectionWrap implements Runnable {
 	}
 
 	void DBWrite(String indexNo, UserInfo ui) { // fill1 output.
+
 		Connection conn = null;
 		PreparedStatement pstmt = null;
+
 		try {
 			Class.forName(JDBC_DRIVER);
 			conn = DriverManager.getConnection(DB_URL, USER_NAME, PASSWORD);
 			System.out.println("[ MySQL Connection  ] \n");
+
 			String sql;
 			script2 = null; // init
 
@@ -300,20 +332,17 @@ class ConnectionWrap implements Runnable {
 			pstmt.setString(3, ui.UserPhone);
 			pstmt.setInt(4, Integer.parseInt(ui.UserNumber));
 			int r = pstmt.executeUpdate();
-			try {
-				Thread.sleep(10000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+
 			pstmt.close();
 			conn.close();
+
 		} // try end
 		catch (SQLException e) {
 			System.out.println("[SQL Error : " + e.getMessage() + "]");
 		} catch (ClassNotFoundException e1) {
 			System.out.println("[JDBC Connector Driver 오류 : " + e1.getMessage() + "]");
 		} finally {
+			// 사용순서와 반대로 close 함
 			if (pstmt != null) {
 				try {
 					pstmt.close();
@@ -336,7 +365,7 @@ class ConnectionWrap implements Runnable {
 		try {
 			while (true) {
 				InputStream is = socket.getInputStream();
-				InputStreamReader isr = new InputStreamReader(is, "UTF-8"); //
+				InputStreamReader isr = new InputStreamReader(is, "UTF-8");
 				BufferedReader br = new BufferedReader(isr);
 				// outputStream 가져와서 StreamWriter, PrintWriter로 감싼다
 				OutputStream os = socket.getOutputStream();
@@ -354,17 +383,30 @@ class ConnectionWrap implements Runnable {
 				}
 				System.out.println("[server] recieved : " + buffer);
 
+				// pw.println(a) --> a(String)을 보내는 함수
+				// 무조건 한번은 써야함!!
 				if (buffer.equals("1")) { // 처음 1. 음식점 확인 누를 경우
 					while (true) {
-						// pw.println(script1);
-						pw.println("|   번호   |   식당 이름   |   식당 전화번호   |   배달여부   |   위치   |\n"
+						pw.println("|   번호   |   식당 이름   |   식당 전화번호   |  빈 테이블 수  |   배달여부   |   위치   |\n"
 								+ DBRead("storeList", "temp") + "\n<< 예약할 식당을 선택하세요 >> (0. 처음으로 돌아가기)");
 						buffer = null;
 						buffer = br.readLine();
 						if (buffer.equals("0")) {
 							pw.println("\n\n1. 음식점 확인 \n2. 예약확인 \n3. 아이디 / 전화번호 입력");
 							break;
-						} else {
+						} else { // 식당번호 입력시 실행
+							ui.UserNumber = buffer;
+							System.out.println(ui.UserId + " " + ui.UserPhone);
+							if (ui.UserId == null || ui.UserPhone == null) { // 아이디, 전화번호 입력여부
+								pw.println("<< 예약 아이디와 전화번호를 입력하세요>> \n\n1. 음식점 확인 \n2. 예약확인 \n3. 아이디 / 전화번호 입력");
+								break;
+							} else if (DBRead("emptyTable", Integer.toString(indexsave)).equals("0")) {
+								// 빈자리 0인곳 입력했을때 break;
+								pw.println(
+										"<< 자리가 꽉 찼습니다. 다음에 다시 예약해주세요. >> \n\n1. 음식점 확인 \n2. 예약확인 \n3. 아이디 / 전화번호 입력 ");
+								break;
+							}
+							// 정상실행
 							selstore = buffer;
 							if (buffer == null) {
 								System.out.println("[server] closed by client");
@@ -373,39 +415,35 @@ class ConnectionWrap implements Runnable {
 							System.out.println("[server] recieved : " + buffer);
 							pw.println("|  메뉴 번호  |     메뉴     |   가격   |\n" + DBRead("menuList", buffer)
 									+ "\n << 예약할 메뉴 번호를 입력하세요 >> (0. 처음으로 돌아가기)");
-							// temp = Integer.parseInt(DBRead("emptyTable", Integer.toString(indexsave)));
-							// //3
-							System.out.println("빈자리 : " + indexsave);
-							// 자리 꽉찼을 시 예약안되게끔 추가
+							System.out.println(indexsave);
 							buffer = null;
 							buffer = br.readLine();
-							if (buffer.equals("0")) {
+
+							if (buffer.equals("0")) { // 취소
 								pw.println("\n\n1. 음식점 확인 \n2. 예약확인 \n3. 아이디 / 전화번호 입력");
 								break;
+							} else {
+								pw.println("인원수를 입력하세요 (0. 처음으로 돌아가기)");
+								buffer = null;
+								buffer = br.readLine();
+								ui.UserNumber = buffer;
+								System.out.println(ui.UserId + " " + ui.UserPhone);
+								if (ui.UserId == null || ui.UserPhone == null) {
+									pw.println("<< 예약 아이디와 전화번호를 입력하세요>> \n\n1. 음식점 확인 \n2. 예약확인 \n3. 아이디 / 전화번호 입력");
+									break;
+								}
+
+								DBWrite(selstore, ui);
+								if (DBUpdate(Integer.toString(indexsave),
+										Integer.parseInt(DBRead("emptyTable", Integer.toString(indexsave))) - 1) == 1) {
+									pw.println(
+											"<< 자리가 꽉 찼습니다. 다음에 다시 예약해주세요. >> \n\n1. 음식점 확인 \n2. 예약확인 \n3. 아이디 / 전화번호 입력 ");
+									break;
+								} else {
+									pw.println("<< 예약 완료되었습니다. >> \n\n1. 음식점 확인 \n2. 예약확인 \n3. 아이디 / 전화번호 입력");
+									break;
+								}
 							}
-							if (Integer.parseInt(DBRead("emptyTable", Integer.toString(indexsave))) == 0) {
-								pw.println(
-										"<< 자리가 꽉 찼습니다. 다음에 다시 예약해주세요. >> \n\n1. 음식점 확인 \n2. 예약확인 \n3. 아이디 / 전화번호 입력 ");
-								break;
-							}
-							if (buffer == null) {
-								System.out.println("[server] closed by client");
-								break;
-							}
-							pw.println("인원수를 입력하세요 (0. 처음으로 돌아가기)");
-							buffer = null;
-							buffer = br.readLine();
-							ui.UserNumber = buffer;
-							System.out.println(ui.UserId + " " + ui.UserPhone);
-							if (ui.UserId == null || ui.UserPhone == null) {
-								pw.println("<< 예약 아이디와 전화번호를 입력하세요>> \n\n1. 음식점 확인 \n2. 예약확인 \n3. 아이디 / 전화번호 입력");
-								break;
-							}
-							DBWrite(selstore, ui);
-							DBUpdate(Integer.toString(indexsave),
-									Integer.parseInt(DBRead("emptyTable", Integer.toString(indexsave))) - 1);
-							pw.println("<< 예약 완료되었습니다. >> \n\n1. 음식점 확인 \n2. 예약확인 \n3. 아이디 / 전화번호 입력");
-							break;
 						}
 					}
 				} else if (buffer.equals("2")) { // 처음 2. 예약확인 누를경우
