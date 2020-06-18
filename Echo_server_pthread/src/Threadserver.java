@@ -65,9 +65,6 @@ class ConnectionWrap implements Runnable {
 	private final static String PASSWORD = "12345678";// 강희정
 	static Connection conn = null;
 	static Statement state = null;
-	private String UserId = null;
-	private String UserPhone = null;
-	private String UserNumber = null;
 	private int indexsave;
 	private int emptytable;
 	final Lock lock = new ReentrantLock();
@@ -276,12 +273,6 @@ class ConnectionWrap implements Runnable {
 		private String UserId = null;
 		private String UserPhone = null;
 		private String UserNumber = null;
-		/*
-		 * public UserInfo(String UserId, String UserPhone, String UserNumber) {
-		 * this.UserId = UserId; this.UserPhone = UserPhone; this.UserNumber =
-		 * UserNumber; }
-		 */
-
 		public void putId(String id) {
 			this.UserId = id;
 		}
