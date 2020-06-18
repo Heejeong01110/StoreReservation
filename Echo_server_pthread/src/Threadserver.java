@@ -92,6 +92,7 @@ class ConnectionWrap implements Runnable {
 
 				while (rs.next()) {
 					String indexNo = rs.getString("indexNo");
+					indexsave = rs.getInt("indexNo");
 					String storeName = rs.getString("storeName");
 					if (storeName.length() > 0 && storeName.length() < 4) {
 
